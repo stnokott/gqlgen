@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"strings"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/vektah/gqlparser/v2/gqlerror"
@@ -82,7 +83,8 @@ func (a AutomaticPersistedQuery) MutateOperationParameters(ctx context.Context, 
 		}
 	} else {
 		// client sent optimistic query hash with query string, verify and store it
-		if computeQueryHash(rawParams.Query) != extension.Sha256 {
+		// since SHA256 hashes are hex and thus case-insensitive, we use EqualFold for a case-insensitive comparison
+		if !strings.EqualFold(computeQueryHash(rawParams.Query), extension.Sha256) {
 			return gqlerror.Errorf("provided APQ hash does not match query")
 		}
 		a.Cache.Add(ctx, extension.Sha256, rawParams.Query)
